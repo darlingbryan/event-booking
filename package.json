@@ -1,0 +1,9 @@
+{
+  "name": "event-booking",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "firebase": "^7.15.5"
+  }
+}
