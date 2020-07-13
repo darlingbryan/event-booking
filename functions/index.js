@@ -10,7 +10,13 @@ const {
   updateEvent,
   getEvent,
 } = require("./handle/events")
-const { addSeats, deleteSeat, bookSeat } = require("./handle/seats")
+const {
+  addSeats,
+  deleteSeat,
+  bookSeat,
+  cancelBooking,
+  updateSeat,
+} = require("./handle/seats")
 
 const { FBAuth } = require("./util/FBAuth")
 
@@ -27,7 +33,9 @@ app.get("/event/:eventId", getEvent)
 
 //Seat Routes
 app.post("/event/:eventId", FBAuth, addSeats)
-app.delete("/seat/:seatId", FBAuth, deleteSeat)
-app.put("/event/:eventId/seat/:seatId", bookSeat)
+app.delete("/event/:eventId/seat/:seatId", FBAuth, deleteSeat)
+app.put("/event/:eventId/seat/:seatId", FBAuth, updateSeat)
+app.put("/guest/event/:eventId/seat/:seatId", bookSeat)
+app.post("/guest/event/:eventId/seat/:seatId", cancelBooking)
 
 exports.api = functions.region("us-central1").https.onRequest(app)

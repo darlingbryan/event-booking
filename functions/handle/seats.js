@@ -1,6 +1,5 @@
 const { db, admin } = require("../util/admin")
 const { checkOwnership } = require("../util/validators")
-const { region } = require("firebase-functions")
 
 //Add seats
 exports.addSeats = async (req, res) => {
@@ -94,7 +93,7 @@ exports.deleteSeat = async (req, res) => {
     return res.status(500).json({ error: err.code })
   }
 }
-
+//bookSeat by guest
 exports.bookSeat = async (req, res) => {
   const seatId = req.params.seatId
   const eventId = req.params.eventId
@@ -126,8 +125,67 @@ exports.bookSeat = async (req, res) => {
   }
 }
 
-exports.cancelBookedSeat = async (req, res) => {
-  //guessed
+//cancel booking by guest
+exports.cancelBooking = async (req, res) => {
+  //check seat ownership
+  const seatId = req.params.seatId
+  const email = req.body.email
+
+  const seatRef = db.collection("seats").doc(seatId)
+
+  try {
+    const seat = await seatRef.get()
+    const seatEmail = seat.data().email
+
+    if (email !== seatEmail)
+      return res.status(400).json({ message: "The registered email is wrong." })
+
+    seatRef.update({
+      guest: "",
+      email: "",
+      phone: "",
+    })
+
+    return res.status(200).json({ message: "Booking canceled." })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ error: err.code })
+  }
 }
 
-exports.reassignGuest = async (req, res) => {}
+//host update seat
+exports.updateSeat = async (req, res) => {
+  const eventId = req.params.eventId
+  const seatId = req.params.seatId
+  const owner = req.user.handle
+
+  newUpdates = {
+    guest: req.body.guest,
+    email: req.body.email,
+    phone: req.body.phone,
+  }
+
+  const { data, userOwnsData, error } = await checkOwnership(
+    seatId,
+    owner,
+    "seats"
+  )
+
+  if (error) return res.status(500).json({ error: error })
+  if (!userOwnsData) return res.json({ error: "Seat not found." })
+
+  const seatRef = db.collection("seats").doc(seatId)
+
+  try {
+    await seatRef.update({
+      guest: req.body.guest,
+      email: req.body.email,
+      phone: req.body.phone,
+    })
+
+    return res.status(200).json({ message: "Seat updated." })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ error: err.code })
+  }
+}
